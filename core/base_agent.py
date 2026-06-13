@@ -40,7 +40,7 @@ class BaseAgent:
         """节点执行结束时记录日志"""
         self.logger.info(f"[{self.name}] 执行完毕")
 
-    def log_error(self,state:AgentState,error:Exception)->None:
+    def log_error(self,error:Exception,state:AgentState)->None:
         """节点执行时发生错误时记录日志"""
         self.logger.error(f"[{self.name}] 执行错误: {error}")
 

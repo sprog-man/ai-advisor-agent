@@ -28,7 +28,7 @@ class AgentState(TypedDict):
     - final_summary: 最终返回给用户的总结
     - error_count: 当前步骤的重试次数
     - max_retries: 最大重试次数
-    - checkpoint_id: 当前检查点ID
+    - current_checkpoint_id: 当前检查点ID
     - status: 整体流程状态 running | success | failed | paused
     """
     messages: Annotated[List[dict],add_messages]
@@ -38,6 +38,6 @@ class AgentState(TypedDict):
     final_summary:str
     error_count:int
     max_retries:int
-    checkpoint_id:Optional[str]
+    current_checkpoint_id:Optional[str]
     status:str
 

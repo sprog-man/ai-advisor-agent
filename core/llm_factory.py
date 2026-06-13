@@ -26,7 +26,14 @@ def create_llm(temperature:float=0.0,max_tokens:int=4096)->ChatOpenAI:
     )
 
 # 默认实例（确定性输出，用于任务拆解）
-llm=create_llm(temperature=0.0)
+# llm=create_llm(temperature=0.0)
+def call_llm(prompt:str)->str:
+    """调用LLM 返回相应文本"""
+    response=create_llm(temperature=0.0).invoke(prompt)
+    return response.content
+
 
 # 创造性实例（用于生成总结等需要发挥的场景）
-crateative_llm=create_llm(temperature=0.7)
+def creative_llm(prompt: str) -> str:
+    response = create_llm(temperature=0.7).invoke(prompt)
+    return response.content
