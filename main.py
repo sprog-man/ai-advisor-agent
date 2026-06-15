@@ -8,7 +8,7 @@ from graph.main_graph import app
 
 def print_banner():
     print("=" * 60)
-    print("  🤖 AI Advisor Agent — 你的专属AI技术顾问")
+    print("   AI Advisor Agent — 你的专属AI技术顾问")
     print("=" * 60)
     print(f"  模型：{settings.llm.model}")
     print(f"  服务：{settings.llm.base_url}")
