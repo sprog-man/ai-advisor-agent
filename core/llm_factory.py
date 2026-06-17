@@ -6,6 +6,8 @@ LLM 工厂模块
 from langchain_openai import ChatOpenAI
 from config.settings import settings
 
+# 新增模块级缓存字典 _llm_cache = {}，以 (temperature, model) 为 key 缓存 ChatOpenAI
+_llm_cache = {}
 def create_llm(temperature:float=0.0,max_tokens:int=4096)->ChatOpenAI:
     """
     创建 LLM 实例
@@ -17,13 +19,20 @@ def create_llm(temperature:float=0.0,max_tokens:int=4096)->ChatOpenAI:
     Returns:
         ChatOpenAI 实例
     """
-    return ChatOpenAI(
-        api_key=settings.llm.api_key,
-        base_url=settings.llm.base_url,
-        model=settings.llm.model,
-        temperature=temperature,
-        max_tokens=max_tokens
+    key=(temperature,settings.llm.model)
+    if key not in _llm_cache:
+        _llm_cache[key]=ChatOpenAI(
+            api_key=settings.llm.api_key,
+            base_url=settings.llm.base_url,
+            model=settings.llm.model,
+            temperature=temperature,
+            max_tokens=max_tokens
     )
+    return _llm_cache[key]
+
+
+    
+    
 
 # 默认实例（确定性输出，用于任务拆解）
 # llm=create_llm(temperature=0.0)

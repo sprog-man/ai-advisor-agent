@@ -14,7 +14,7 @@ class DecomposeAgent(BaseAgent):
 
     def __init__(self):
         super().__init__(name="DecomposeAgent")
-        self.structured_llm = create_llm().with_structured_output(PlanSchema)
+        self.structured_llm = create_llm(temperature=0.5).with_structured_output(PlanSchema)
 
     def __call__(self,state:AgentState)->AgentState:
         self.log_start(state)

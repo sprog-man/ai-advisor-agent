@@ -8,10 +8,10 @@ from typing import List,Optional
 
 class IntentSchema(BaseModel):
     """意图理解的结构化输出"""
-    objective:str=Field(...,description="一句话概括用户想实现什么或者想问什么")
-    constraints:List[str]=Field(default_factory=list,description="限制条件列表")
-    domain:str=Field(...,description="所属AI子领域，如NLP、CV、LLM应用等")
-    complexity:str=Field(default="medium", description="复杂度：simple/medium/complex")
+    objective:str=Field(...,description="用一句话自然语言概括用户想了解什么或实现什么（例如'了解Transformer架构的原理'，不要用分类标签）")
+    constraints:List[str]=Field(default_factory=list,description="限制条件列表，如'需要中文回答'、'要具体步骤'等。无限制则为空列表")
+    domain:str=Field(...,description="所属AI子领域，如NLP、CV、LLM应用、模型部署、推荐系统等。精确到具体子领域")
+    complexity:str=Field(default="medium", description="复杂度：simple/medium/complex。纯知识问答为simple，涉及多步骤实现为complex")
 
 class TaskStep(BaseModel):
     """单个任务步骤"""

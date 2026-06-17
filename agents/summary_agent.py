@@ -5,7 +5,7 @@
 
 import json
 from core.base_agent import BaseAgent
-from core.llm_factory import call_llm
+from core.llm_factory import create_llm
 from state.agent_state import AgentState
 
 class SummaryAgent(BaseAgent):
@@ -13,6 +13,7 @@ class SummaryAgent(BaseAgent):
 
     def __init__(self):
         super().__init__(name="SummaryAgent")
+        self.llm=create_llm(temperature=0.7)
 
     def __call__(self,state:AgentState)->AgentState:
 
@@ -53,8 +54,8 @@ class SummaryAgent(BaseAgent):
 - 鼓励用户动手开始
 
 语气要求：专业但不生硬，像一位有经验的技术朋友在给出建议。"""
-            response=call_llm(prompt)
-            state["final_summary"]=response
+            response=self.llm.invoke(prompt)
+            state["final_summary"]=response.content
             state["status"]="success"
 
             self.log_end(state)

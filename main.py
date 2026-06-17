@@ -21,37 +21,37 @@ def print_banner():
 def main():
     print_banner()
 
+    #会话配置：用固定thread_id 保持记忆，用户可reset
+    config={"configurable":{"thread_id": "user-session-1"}}
+
     while True:
         try:
             user_input=input("\n 你:").strip()
 
         except (EOFError,KeyboardInterrupt):
-            print("\n\n👋 再见！")
+            print("\n\n再见！")
             break
 
         if not user_input: continue
 
         if user_input.lower() in ["quit", "exit","q"]:
-            print("👋 再见！")
+            print("再见！")
             break
 
-        #准备初始状态
-        initial_state={
-            "messages":[{"role":"user","content":user_input}],
-            "user_intent":"",
-            "plan":[],
-            "knowledege_context":"",
-            "final_summary":"",
-            "error_count":0,
-            "max_retries":3,
-            "current_checkpoint_id":None,
-            "status":"running"
-        }
+        if user_input.lower() == "reset":
+            # 重置：更换 thread_id 即可开始新会话
+            config["configurable"]["thread_id"]=f"session-{__import__('time').time()}"
+            print(" 对话已重置，开始全新会话。")
+            continue
+
+        #准备初始状态（checkpoint 会自动恢复其他字段）
+        initial_state = {"messages": [{"role": "user", "content": user_input}]}
 
         print("\n⏳ 正在分析你的想法...")
 
         try:
-            result=app.invoke(initial_state)
+            # 传入 thread_id 激活 checkpoint
+            result=app.invoke(initial_state,config)
             print(f"\n{result['final_summary']}\n")
             print("-" * 60)
         except Exception as e:
