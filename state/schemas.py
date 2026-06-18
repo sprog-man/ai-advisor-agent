@@ -28,3 +28,29 @@ class SearchQuery(BaseModel):
     """知识检索查询（未来工具调用时使用）"""
     query:str=Field(...,description="用于检索的查询字符串")
     top_k:int=Field(default=5,ge=1,le=20,description="返回结果数量")
+
+# phase 4 增加的schemas字段
+from datetime import datetime
+
+class UserPreference(BaseModel):
+    """用户偏好"""
+    category:str=Field(...,description="用户偏好的类别")
+    value:str=Field(...,description="用户偏好值")
+    confidence:float=Field(default=0.8, ge=0, le=1, description="置信度")
+    source:str=Field(default="inferred",description="来源:stated(用户明确)| inferred(推断)")
+
+class KeyFact(BaseModel):
+    """关键事实"""
+    subject:str=Field(...,description="主题,如用户、项目A")
+    predicate:str=Field(...,description="谓词，如 使用、偏好、部署于")
+    object:str=Field(...,description="宾语，如 Python、AWS")
+    timestamp:str=Field(default_factory=lambda:datetime.now().isoformat())
+    confidence:float=1.0
+
+class MemoryExtraction(BaseModel):
+    """从对话中提炼的记忆条目"""
+    preferences:List[UserPreference]=Field(default_factory=list)
+    facts:List[KeyFact]=Field(default_factory=list)
+
+
+

@@ -14,7 +14,37 @@ from agents.intent_agent import IntentAgent
 from agents.decompose_agent import DecomposeAgent
 from agents.summary_agent import SummaryAgent
 from rag.retrieve import KnowledgeRetriever
+from memory.memory_manager import MemoryManager
+from agents.memory_agent import memory_extraction_agent
 
+# phase4 新增长记忆节点
+memory_manager=MemoryManager()
+def retrieve_long_term_memory(state:AgentState)->AgentState:
+    """从长期记忆中检索与当前意图相关的内容"""
+    query=state.get("user_intent","")
+    mem=memory_manager.retrieve(query,top_k=3)
+    state["long_term_context"]=memory_manager.format_results(mem)
+    return state
+
+def record_memory(state:AgentState)->AgentState:
+    """提炼并存储长期记忆"""
+    # 先提炼
+    state=memory_extraction_agent(state)
+    # 写入
+    extraction=state.get("memory_extraction",{})
+    if extraction:
+        from state.schemas import MemoryExtraction
+        try:
+            thread_id=state.get("thread_id","default")
+            memory_manager.record_extraction(extraction,thread_id)
+            # 同时记录冷记忆(对话日志)
+            for msg in state["messages"][-2:]: # 只取最近两条消息
+                role="user" if msg.type=="human" else "assistant"
+                memory_manager.cold_store.log(thread_id,role,content=msg.content)
+        except Exception as e:
+            print(f"记忆记录失败:{e}")
+    
+    return state
 
 
 #全局检索器实例
@@ -47,12 +77,12 @@ def retrieve_knowledge(state:AgentState)->AgentState:
 
 
 def should_retry(state:AgentState)->str:
-    """如果用户最近一条消息表明不满意，返回 'decompose' 重新拆解"""
+    """如果用户最近一条消息表明不满意，返回 'intent' 重新开始全流程"""
     last_msg=state["messages"][-1]
     content=last_msg.content if hasattr(last_msg, "content") else str(last_msg)
     if any(word in content for word in ["不满意","不满","不满意","换一种","再来","重新"]):
-        return "decompose" # 返回 'decompose'节点
-    return "summary"
+        return "intent" # 回退到意图理解，重新走全流程
+    return END
 
 def build_graph():
     
@@ -64,6 +94,8 @@ def build_graph():
     #注册节点
     workflow.add_node("intent",IntentAgent())
     workflow.add_node("retrieve",retrieve_knowledge) #Phase 2 新增
+    workflow.add_node("retrieve_memory",retrieve_long_term_memory) #Phase 4 新增
+    workflow.add_node("record_memory",record_memory) #Phase 4 新增
     workflow.add_node("decompose",DecomposeAgent())
     workflow.add_node("summary",SummaryAgent())
 
@@ -72,17 +104,20 @@ def build_graph():
 
     #连线：线性流水线
     # 连线：意图理解 → 知识检索 → 任务拆解 → 总结
-    workflow.add_edge("intent","retrieve")
+    workflow.add_edge("intent","retrieve_memory")
+    workflow.add_edge("retrieve_memory","retrieve")
     workflow.add_edge("retrieve","decompose")
     workflow.add_edge("decompose","summary")
+    workflow.add_edge("summary","record_memory")
+    workflow.add_edge("record_memory",END)
     # workflow.add_edge("summary",END)
-    # phase 3 添加节点回滚从 summary 出来后，不是直接 END，而是根据条件决定是否重新拆解
+    # phase 3 添加节点回滚：summary 节点执行后，根据条件决定是否重新开始
     workflow.add_conditional_edges(
-        "summary",
+        "record_memory",
         should_retry,
         {
-            "decompose": "decompose", # 回退到 任务拆解
-            "summary": END  # 正常结束
+            "intent": "intent", # 回退到意图理解，重新走全流程
+            END: END  # 正常结束
         }
     )
 

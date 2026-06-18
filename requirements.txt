@@ -5,6 +5,7 @@ langchain>=0.3.0
 langchain-openai>=0.2.0
 langchain-text-splitters>=0.3.0
 openai>=1.0.0
+networkx>=3.0,<4.0
 
 # 配置管理
 python-dotenv>=1.0.0

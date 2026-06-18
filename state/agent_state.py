@@ -40,4 +40,6 @@ class AgentState(TypedDict):
     max_retries:int
     current_checkpoint_id:Optional[str]
     status:str
+    long_term_context:str
+    extracted_memory:dict
 
